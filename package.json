@@ -1,0 +1,31 @@
+{
+  "name": "express-rag-api",
+  "version": "1.0.0",
+  "description": "Express.js RAG API with Ollama DeepSeek-R1 and HuggingFace embeddings",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "rag",
+    "ollama",
+    "deepseek",
+    "huggingface",
+    "embeddings",
+    "semantic-search"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@xenova/transformers": "^2.17.0",
+    "axios": "^1.13.4",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "node-html-parser": "^7.0.2",
+    "undici": "^6.20.0"
+  }
+}

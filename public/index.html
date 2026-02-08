@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG System Tester</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #e4e4e4;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .status-bar {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #888;
+        }
+
+        .status-dot.online {
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #00d9ff;
+        }
+
+        textarea,
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        button {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.95rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 16px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab.active {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .sources {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .source {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 0.85rem;
+            border-left: 3px solid #00d9ff;
+        }
+
+        .source strong {
+            color: #00d9ff;
+        }
+
+        .score {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .loading {
+            color: #00d9ff;
+            animation: pulse 1s infinite;
+        }
+
+        .success {
+            color: #00ff88;
+        }
+
+        .info {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .url-example {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔮 RAG System Tester</h1>
+        <p class="subtitle">Web Scraping + Llama 3.2 + HuggingFace Embeddings</p>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span id="model-info">Model: Loading...</span>
+            </div>
+            <div class="status-item">
+                <span id="docs-count">Docs: 0</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('chat')">💬 Chat</div>
+            <div class="tab" onclick="switchTab('index')">🌐 Index URL</div>
+            <div class="tab" onclick="switchTab('search')">🔍 Search</div>
+            <div class="tab" onclick="switchTab('docs')">📚 Documents</div>
+            <div class="tab" onclick="switchTab('health')">❤️ Health</div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="chat-tab" class="card">
+            <h2>💬 RAG Chat</h2>
+            <textarea id="chat-input" rows="3"
+                placeholder="Ask something like: What is example domain?">Tell me about the example domain</textarea>
+            <button onclick="sendChat()">Send Message</button>
+            <div id="chat-response" class="response hidden"></div>
+        </div>
+
+        <!-- Index URL Tab -->
+        <div id="index-tab" class="card hidden">
+            <h2>🌐 Index Website</h2>
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 12px;">
+                Scrape and index a website to add it to your knowledge base
+            </p>
+            <input type="url" id="index-url" placeholder="https://example.com" />
+            <p class="url-example">Try: https://en.wikipedia.org/wiki/Artificial_intelligence</p>
+            <button onclick="indexUrl()">🚀 Scrape & Index</button>
+            <div id="index-response" class="response hidden"></div>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search-tab" class="card hidden">
+            <h2>🔍 Semantic Search</h2>
+            <input type="text" id="search-input" placeholder="Search your knowledge base..." />
+            <button onclick="sendSearch()">Search</button>
+            <div id="search-response" class="response hidden"></div>
+        </div>
+
+        <!-- Documents Tab -->
+        <div id="docs-tab" class="card hidden">
+            <h2>📚 Indexed Documents</h2>
+            <button onclick="loadDocuments()">Load All Documents</button>
+            <div id="docs-response" class="response hidden"></div>
+        </div>
+
+        <!-- Health Tab -->
+        <div id="health-tab" class="card hidden">
+            <h2>❤️ System Health</h2>
+            <button onclick="checkHealth()">Check Full Health</button>
+            <div id="health-response" class="response hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Auto-load status on page load
+        window.addEventListener('load', () => {
+            updateStatus();
+            setInterval(updateStatus, 10000); // Update every 10s
+        });
+
+        async function updateStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                const data = await res.json();
+
+                const statusDot = document.getElementById('status-dot');
+                const statusText = document.getElementById('status-text');
+                const modelInfo = document.getElementById('model-info');
+                const docsCount = document.getElementById('docs-count');
+
+                if (data.success) {
+                    statusDot.classList.add('online');
+                    statusText.textContent = '✅ Online';
+                    modelInfo.textContent = `Model: ${data.data.services.ollama.model}`;
+                    docsCount.textContent = `Docs: ${data.data.services.vectorStore.documentCount}`;
+                } else {
+                    statusDot.classList.remove('online');
+                    statusText.textContent = '❌ Offline';
+                }
+            } catch (err) {
+                document.getElementById('status-text').textContent = '❌ Error';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.remove('hidden');
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const response = document.getElementById('chat-response');
+            const btn = event.target;
+
+            if (!input.value.trim()) return;
+
+            btn.disabled = true;
+            response.classList.remove('hidden');
+            response.innerHTML = '<span class="loading">⏳ Thinking...</span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: input.value, topK: 3 })
+                });
+                const data = await res.json();
+
+                let html = `<strong style="color: #00ff88;">Answer:</strong>\n${data.data.answer}\n\n`;
+                html += `<div class="sources"><strong>📚 Sources (${data.data.sources.length}):</strong>`;
+                data.data.sources.forEach((s, i) => {
+                    const url = s.url || 'N/A';
+                    html += `<div class="source"><strong>${i + 1}. ${s.title}</strong> <span class="score">(${(s.relevanceScore * 100).toFixed(1)}%)</span>\n📎 ${url}</div>`;
+                });
+                html += `</div>`;
+                html += `\n<div class="info">🤖 Generation: ${data.data.metadata.generationMethod} | 📊 Retrieved: ${data.data.metadata.documentsRetrieved} docs</div>`;
+                response.innerHTML = html;
+                updateStatus(); // Refresh status
+            } catch (err) {
+                response.innerHTML = `❌ Error: ${err.message}`;
+            }
+            btn.disabled = false;
+        }
+
+        async function indexUrl() {
+            const input = document.getElementById('index-url');
+            const response = document.getElementById('index-response');
+            const btn = event.target;
+
+            if (!input.value.trim()) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            btn.disabled = true;
+            response.classList.remove('hidden');
+            response.innerHTML = '<span class="loading">⏳ Scraping and indexing... This may take a few seconds...</span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/index/url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: input.value })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    let html = `<span class="success">✅ Successfully indexed!</span>\n\n`;
+                    html += `<strong>URL:</strong> ${data.data.url}\n`;
+                    html += `<strong>Chunks created:</strong> ${data.data.chunks}\n`;
+                    if (data.data.errors.length > 0) {
+                        html += `\n<strong style="color: #ff6b6b;">Errors:</strong>\n${data.data.errors.join('\n')}`;
+                    }
+                    html += `\n<div class="info">💡 You can now ask questions about this content in the Chat tab!</div>`;
+                    response.innerHTML = html;
+                    updateStatus(); // Refresh doc count
+
+                    // Clear input
+                    input.value = '';
+                } else {
+                    response.innerHTML = `❌ Failed to index: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (err) {
+                response.innerHTML = `❌ Error: ${err.message}`;
+            }
+            btn.disabled = false;
+        }
+
+        async function sendSearch() {
+            const input = document.getElementById('search-input');
+            const response = document.getElementById('search-response');
+            const btn = event.target;
+
+            if (!input.value.trim()) return;
+
+            btn.disabled = true;
+            response.classList.remove('hidden');
+            response.innerHTML = '<span class="loading">⏳ Searching...</span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: input.value, topK: 5 })
+                });
+                const data = await res.json();
+
+                let html = `<strong>Found ${data.data.totalResults} results:</strong>\n\n`;
+                data.data.results.forEach((r, i) => {
+                    const url = r.url || 'N/A';
+                    html += `<div class="source"><strong>${i + 1}. ${r.title}</strong> <span class="score">(${(r.score * 100).toFixed(1)}%)</span>\n${r.content.substring(0, 200)}...\n📎 ${url}</div>`;
+                });
+                response.innerHTML = html;
+            } catch (err) {
+                response.innerHTML = `❌ Error: ${err.message}`;
+            }
+            btn.disabled = false;
+        }
+
+        async function loadDocuments() {
+            const response = document.getElementById('docs-response');
+            const btn = event.target;
+
+            btn.disabled = true;
+            response.classList.remove('hidden');
+            response.innerHTML = '<span class="loading">⏳ Loading...</span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/documents`);
+                const data = await res.json();
+
+                const grouped = {};
+                data.data.documents.forEach(doc => {
+                    const url = doc.url || doc.category || 'Unknown';
+                    if (!grouped[url]) grouped[url] = [];
+                    grouped[url].push(doc);
+                });
+
+                let html = `<strong>Total Documents: ${data.data.documents.length}</strong>\n`;
+                html += `<strong>Unique Sources: ${Object.keys(grouped).length}</strong>\n\n`;
+
+                Object.entries(grouped).forEach(([source, docs]) => {
+                    html += `<div class="source"><strong>📄 ${source}</strong> (${docs.length} chunks)\n`;
+                    html += `Categories: ${[...new Set(docs.map(d => d.category))].join(', ')}</div>`;
+                });
+
+                html += `\n<div class="info">Storage: ${data.data.stats.storePath}</div>`;
+                response.innerHTML = html;
+            } catch (err) {
+                response.innerHTML = `❌ Error: ${err.message}`;
+            }
+            btn.disabled = false;
+        }
+
+        async function checkHealth() {
+            const response = document.getElementById('health-response');
+            const btn = event.target;
+
+            btn.disabled = true;
+            response.classList.remove('hidden');
+            response.innerHTML = '<span class="loading">⏳ Checking...</span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                const data = await res.json();
+                response.innerHTML = JSON.stringify(data, null, 2);
+            } catch (err) {
+                response.innerHTML = `❌ Error: ${err.message}`;
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+
+</html>
